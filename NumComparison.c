@@ -6,14 +6,24 @@
 //  to allow bit shifting), but care needs to be taken to ensure that the mantissa bits and exponent bits are identified correctly
 //  (check the IEEE754 standard)
 
+
+//&  means 'bitwise AND', which applies the AND operation to all bits of a specific place value, then does that for every place value.
+//<< means 'bitshift left', which shifts each bit in the binary representation of a decimal # to the left by the specified amount,
+//     overwriting and discarding the MSB and filling in the LSB with a 0.
+//   128<<1 means (1000 0000 << 1) ==  (1_discard 0000 000 0_fill) == (0000 0000) == 0
+//   20<<2  means (0001 0100 << 2) == (00_discard 0101 00 00_fill) == (0101 0000) == 16+64==80
+//   someVar <<= 3 means Shift 3 bits to the left, then STORE the result into the same variable
+//someVar++ means someVar+=1, which means someVar = someVar+1
+
 #define DEBUG 0
 
 void printBinary(const char input)
 {
 	if(DEBUG){printf("printBinary(%d): ",input);}
 	char iterations = 0;
+	const char NUM_BITS_IN_CHAR = 8;
 	char c = input;
-	while(iterations!=8)
+	while(iterations != NUM_BITS_IN_CHAR)
 	{
 		if(c & (unsigned char)128){printf("1");}	//if(MSB is1){print1} otherwise{print0}
 		else{printf("0");}
@@ -24,12 +34,26 @@ void printBinary(const char input)
 	printf("\n");
 }
 
-//&  means 'bitwise AND', which applies the AND operation to all bits of a specific place value, then does that for every place value.
-//<< means 'bitshift left', which shifts each bit in the binary representation of a decimal # to the left by the specified amount,
-//     overwriting and discarding the MSB and filling in the LSB with a 0.
-//   128<<1 means (1000 0000 << 1) ==  (1_discard 0000 000 0_fill) == (0000 0000) == 0
-//   20<<2  means (0001 0100 << 2) == (00_discard 0101 00 00_fill) == (0101 0000) == 16+64==80
-//   someVar <<= 3 means Shift 3 bits to the left, then store the result into the same variable
+
+const char isEqualTo(const char in1, const char in2)
+{
+	//Any # XOR'd with itself yields 0 because XOR is the "either this or that BUT NOT BOTH" operator.
+	//XOR the two inputs to get 0. If any bit is not 0 (verified by bitwise AND and bitshifting), then the two inputs aren't equal.
+	char result = in1 ^ in2;	//^ is the XOR operator, which every piece of computer hardware should know how to execute
+	if(DEBUG){printf("in1(%d) ^ in2(%d): %d\n", in1,in2, result);}
+
+	char iterations = 0;
+	const char NUM_BITS_IN_CHAR = 8;
+	while(iterations != NUM_BITS_IN_CHAR)
+	{
+		if(result & (unsigned char)128){printf("Not equal\n"); return 0;}	//if(MSB is1){printNotEqual,returnFalse} otherwise{continueCheckingRestOfBits}
+		
+		result <<= 1;
+		iterations++;
+	}
+	printf("Is equal\n");
+	return 1;
+}
 
 //Uses bitwise AND (&), logical OR (||), logical AND (&&), equivalence (==), negated equivalence (!=), bitshift left (<<), if statements
 //Returns the bigger of the input chars (with the original input address, not newly allocated #s).
@@ -81,6 +105,13 @@ const char biggerNumIs(const char in1, const char in2)
 	return in1;		//Arbitrarily in1 instead of in2
 }
 
+const char smallerNumIs(const char in1, const char in2)
+{
+	char bigger = biggerNumIs(in1,in2);
+	if(bigger==in1){return in2;}
+	return in1;
+}
+
 void test_printBinary()
 {
 	printf("printBinary(0):    ");
@@ -115,6 +146,55 @@ void test_printBinary()
 
 	printf("printBinary(256):  ");
 	printBinary(256);
+}
+void test_isEqualTo()
+{
+	char num1=0, num2=0;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=10, num2=0;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=0, num2=10;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-10, num2=0;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=0, num2=-10;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-5, num2=-10;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-10, num2=-5;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-10, num2=-9;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-8, num2=-9;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=127, num2=0;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=0, num2=127;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=-128, num2=0;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=0, num2=-128;
+	printf("isEqualTo(%d,%d): %d\n\n", num1,num2,isEqualTo(num1,num2));
+
+	num1=256, num2=0;
+	printf("isEqualTo(256,%d): %d\n\n", num2,isEqualTo(num1,num2));
+
+	num1=255, num2=0;
+	printf("isEqualTo(255,%d): %d\n\n", num2,isEqualTo(num1,num2));
+
+	return;
 }
 void test_biggerNumIs()
 {
@@ -165,10 +245,61 @@ void test_biggerNumIs()
 
 	return;
 }
+void test_smallerNumIs()
+{
+	char num1=0, num2=0;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=10, num2=0;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=0, num2=10;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-10, num2=0;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=0, num2=-10;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-5, num2=-10;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-10, num2=-5;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-10, num2=-9;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-8, num2=-9;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=127, num2=0;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=0, num2=127;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=-128, num2=0;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=0, num2=-128;
+	printf("smallerNumIs(%d,%d): %d\n\n", num1,num2,smallerNumIs(num1,num2));
+
+	num1=256, num2=0;
+	printf("smallerNumIs(256,%d): %d\n\n", num2,smallerNumIs(num1,num2));
+
+	num1=255, num2=0;
+	printf("smallerNumIs(255,%d): %d\n\n", num2,smallerNumIs(num1,num2));
+
+	return;
+}
 
 int main()
 {
-	test_biggerNumIs();
-	test_printBinary();
+	//test_biggerNumIs();
+	test_smallerNumIs();
+	test_isEqualTo();
+	//test_printBinary();
 	return 0;
 }
